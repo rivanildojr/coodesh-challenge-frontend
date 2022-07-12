@@ -15,7 +15,7 @@
     </div>
 
     <h2 class="text-base md:text-lg font-medium text-gray-800">
-      Pacientes
+      Patients
     </h2>
   </header>
 </template>
