@@ -1,14 +1,9 @@
 import { createStore } from 'vuex'
 
+import patient from './modules/Patient'
+
 export default createStore({
-  state: {
-  },
-  getters: {
-  },
-  mutations: {
-  },
-  actions: {
-  },
   modules: {
+    patient
   }
 })
