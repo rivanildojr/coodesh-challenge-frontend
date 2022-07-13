@@ -1,5 +1,7 @@
 
 <template>
+  <modal-factory />
+
   <div class="h-screen flex flex-col">
     <the-header />
 
@@ -12,11 +14,13 @@
 </template>
 
 <script>
+import ModalFactory from '@/components/ModalFactory'
 import TheHeader from '@/components/TheHeader'
 import TheFooter from '@/components/TheFooter'
 
 export default {
   components: {
+    ModalFactory,
     TheHeader,
     TheFooter
   },

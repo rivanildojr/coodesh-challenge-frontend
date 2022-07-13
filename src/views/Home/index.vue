@@ -53,10 +53,12 @@
 </template>
 
 <script>
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
-
 import { useToast } from 'vue-toastification'
+import { useRouter, useRoute } from 'vue-router'
+
+import useModal from '@/hooks/useModal'
 
 import Search from '@/components/Search'
 import Icon from '@/components/Icon'
@@ -88,10 +90,21 @@ export default {
 
     const store = useStore()
     const toast = useToast()
+    const modal = useModal()
+    const router = useRouter()
+    const route = useRoute()
 
     onMounted(async () => {
       await getPatients()
     })
+
+    watch(() => route.params.id, () => {
+      if (!route.params.id) return
+
+      modal.open({
+        component: 'ModalUser'
+      })
+    }, { immediate: true })
 
     const patientsStore = computed(() => {
       return store.state.patient.patients
@@ -130,7 +143,12 @@ export default {
     }
 
     function handleShowDetailsPatients (id) {
-      console.log({ id })
+      router.push({
+        name: 'patients',
+        params: {
+          id
+        }
+      })
     }
 
     return {
