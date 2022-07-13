@@ -4,10 +4,12 @@
 
 <script>
 import Loading from './Loading.vue'
+import Search from './Search.vue'
 
 export default {
   components: {
-    Loading
+    Loading,
+    Search
   },
   props: {
     name: {
