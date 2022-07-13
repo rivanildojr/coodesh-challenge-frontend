@@ -1,52 +1,64 @@
 
 <template>
-  <div class="flex flex-col p-10 justify-center items-center">
-    <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-4">
-      Company patient list
-    </h1>
+  <div class="p-10 w-full flex flex-col justify-center items-center">
+    <div class="flex flex-col justify-center items-center w-9/12">
+      <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-4">
+        Company patient list
+      </h1>
 
-    <user-loading v-if="state.isLoading && !state.patients.length" />
-
-    <p
-      v-else-if="state.hasError"
-      class="text-lg font-medium text-gray-800 text-center"
-    >
-      There was an error loading Patient data
-    </p>
-
-    <user-table
-      v-else
-      class="max-w-xl"
-      :patients="state.patients"
-      @show-details="handleShowDetailsPatients"
-    />
-
-    <user-loading
-      v-if="state.isLoading && state.patients.length"
-      class="mt-5"
-    />
-
-    <button
-      class="flex justify-center items-center gap-2 mt-5 focus:outline-none p-2 cursor-pointer"
-      @click="getPatients"
-      :disabled="state.isLoading"
-    >
-      <Icon
-        name="loading"
-        size="24"
-        color="#333"
+      <search
+        v-model:search="search"
+        class="mb-10 w-full"
       />
 
-      <span class="text-gray-800 font-regular">
-        Loading more...
-      </span>
-    </button>
+      <user-loading v-if="state.isLoading && !patientsStore.length" />
+
+      <p
+        v-else-if="state.hasError"
+        class="text-lg font-medium text-gray-800 text-center"
+      >
+        There was an error loading Patient data
+      </p>
+
+      <user-table
+        v-else
+        class="w-full"
+        :patients="filterListPatients"
+        @show-details="handleShowDetailsPatients"
+      />
+
+      <user-loading
+        v-if="state.isLoading && patientsStore.length"
+        class="mt-5"
+      />
+
+      <button
+        v-show="filterListPatients.length"
+        class="flex justify-center items-center gap-2 mt-5 focus:outline-none p-2 cursor-pointer ease-in duration-500"
+        @click="getPatients"
+        :disabled="state.isLoading"
+      >
+        <Icon
+          name="loading"
+          size="24"
+          color="#333"
+        />
+
+        <span class="text-gray-800 font-regular">
+          Loading more...
+        </span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, ref, computed } from 'vue'
+import { useStore } from 'vuex'
 
+import { useToast } from 'vue-toastification'
+
+import Search from '@/components/Search'
 import Icon from '@/components/Icon'
 import UserTable from './UserTable/index.vue'
 import UserLoading from './UserTable/Loading.vue'
@@ -58,13 +70,13 @@ const MAX_LIMIT = 50
 
 export default {
   components: {
+    Search,
     UserTable,
     UserLoading,
     Icon
   },
   setup () {
     const state = reactive({
-      patients: [],
       isLoading: false,
       hasError: false,
       pagination: {
@@ -72,9 +84,27 @@ export default {
         results: MAX_LIMIT
       }
     })
+    const search = ref('')
+
+    const store = useStore()
+    const toast = useToast()
 
     onMounted(async () => {
       await getPatients()
+    })
+
+    const patientsStore = computed(() => {
+      return store.state.patient.patients
+    })
+
+    const filterListPatients = computed(() => {
+      if (!search.value) return patientsStore.value
+
+      return patientsStore.value.filter((patient) => {
+        const fullName = `${patient.name.title} ${patient.name.first} ${patient.name.last}`
+
+        return fullName.toLowerCase().includes(search.value.trim().toLowerCase())
+      })
     })
 
     async function getPatients () {
@@ -84,7 +114,7 @@ export default {
           ...state.pagination
         })
 
-        if (data?.results.length) state.patients.push(...data?.results)
+        if (data?.results.length) store.dispatch('patient/addPatients', data?.results)
 
         state.pagination.page = ++state.pagination.page
       } catch (error) {
@@ -96,6 +126,7 @@ export default {
 
     function handleError (error) {
       state.hasError = !!error
+      toast.error('An error occurred while loading patients.')
     }
 
     function handleShowDetailsPatients (id) {
@@ -104,6 +135,9 @@ export default {
 
     return {
       state,
+      search,
+      patientsStore,
+      filterListPatients,
       handleShowDetailsPatients,
       getPatients
     }
