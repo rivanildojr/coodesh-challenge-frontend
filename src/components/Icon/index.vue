@@ -5,11 +5,13 @@
 <script>
 import Loading from './Loading.vue'
 import Search from './Search.vue'
+import Filter from './Filter.vue'
 
 export default {
   components: {
     Loading,
-    Search
+    Search,
+    Filter
   },
   props: {
     name: {
