@@ -36,6 +36,7 @@
       </p>
 
       <user-table
+        id="user-table"
         v-else
         class="w-full"
         :patients="filterListPatients"
