@@ -1,15 +1,30 @@
 
 <template>
-  <div class="p-10 w-full flex flex-col justify-center items-center">
-    <div class="flex flex-col justify-center items-center w-9/12">
+  <div class="p-5 sm:p-10 w-full flex flex-col justify-center items-center">
+    <div class="flex flex-col justify-center items-center w-full sm:w-9/12 max-w-5xl">
       <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-4">
         Company patient list
       </h1>
 
-      <search
-        v-model:search="search"
-        class="mb-10 w-full"
-      />
+      <div class="mb-10 w-full flex gap-2 relative">
+        <search
+          v-model:search="search"
+        />
+
+        <button
+          class="bg-brand-main w-max px-4 flex items-center justify-center rounded-sm text-white font-medium focus:outline-none cursor-pointer hover:brightness-95"
+          @click="handleToggleFilter"
+        >
+          Filter
+        </button>
+
+        <filter-table
+          v-show="showFilter"
+          :items="itemsFilter"
+          @select="handleSelectFilter"
+          class="absolute top-12 right-0 bg-white flex items-center justify-center rounded-sm z-10"
+        />
+      </div>
 
       <user-loading v-if="state.isLoading && !patientsStore.length" />
 
@@ -62,8 +77,11 @@ import useModal from '@/hooks/useModal'
 
 import Search from '@/components/Search'
 import Icon from '@/components/Icon'
-import UserTable from './UserTable/index.vue'
+import UserTable from './UserTable'
 import UserLoading from './UserTable/Loading.vue'
+import FilterTable from './FilterTable'
+
+import { FILTER_NAME, FIELD_NAME } from './constants'
 
 import services from '@/services'
 
@@ -75,7 +93,8 @@ export default {
     Search,
     UserTable,
     UserLoading,
-    Icon
+    Icon,
+    FilterTable
   },
   setup () {
     const state = reactive({
@@ -87,6 +106,8 @@ export default {
       }
     })
     const search = ref('')
+    const showFilter = ref('')
+    const filterSearch = ref('')
 
     const store = useStore()
     const toast = useToast()
@@ -113,11 +134,14 @@ export default {
     const filterListPatients = computed(() => {
       if (!search.value) return patientsStore.value
 
-      return patientsStore.value.filter((patient) => {
-        const fullName = `${patient.name.title} ${patient.name.first} ${patient.name.last}`
-
-        return fullName.toLowerCase().includes(search.value.trim().toLowerCase())
-      })
+      switch (filterSearch.value) {
+        case 'name':
+          return filterName()
+        case 'nat':
+          return filterNationality()
+        default:
+          return filterName()
+      }
     })
 
     async function getPatients () {
@@ -151,13 +175,41 @@ export default {
       })
     }
 
+    function handleSelectFilter (value) {
+      if (!value) return
+
+      filterSearch.value = value === FIELD_NAME ? 'name' : 'nat'
+    }
+
+    function handleToggleFilter () {
+      showFilter.value = !showFilter.value
+    }
+
+    function filterName () {
+      return patientsStore.value.filter((patient) => {
+        const fullName = `${patient.name.title} ${patient.name.first} ${patient.name.last}`
+
+        return fullName.toLowerCase().includes(search.value.trim().toLowerCase())
+      })
+    }
+
+    function filterNationality () {
+      return patientsStore.value.filter((patient) => {
+        return patient.nat.toLowerCase().includes(search.value.trim().toLowerCase())
+      })
+    }
+
     return {
       state,
       search,
       patientsStore,
       filterListPatients,
+      showFilter,
+      itemsFilter: FILTER_NAME,
       handleShowDetailsPatients,
-      getPatients
+      getPatients,
+      handleSelectFilter,
+      handleToggleFilter
     }
   }
 }
