@@ -10,7 +10,7 @@ export const routes = [
     redirect: { name: 'patients' }
   },
   {
-    path: '/pacientes/:id?',
+    path: '/pacientes/:page?/:seed?/:id?',
     name: 'patients',
     component: Home
   },

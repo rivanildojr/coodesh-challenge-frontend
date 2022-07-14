@@ -69,7 +69,7 @@
     <div class="flex mb-2">
       <span class="text-lg font-bold">URL:</span>
       <span
-        class="text-lg font-regular ml-2 text-ellipsis overflow-hidden cursor-pointer"
+        class="text-lg font-regular ml-2 underline text-ellipsis overflow-hidden cursor-pointer"
         @click="handleCopyUrl"
       >
         {{ url }}
@@ -88,6 +88,8 @@ import ContentLoader from '@/components/ContentLoader'
 
 import services from '@/services'
 
+const MAX_LIMIT = 50
+
 export default {
   components: {
     ContentLoader
@@ -100,7 +102,7 @@ export default {
     const toast = useToast()
 
     onMounted(async () => {
-      await getPatient()
+      await getPatients()
     })
 
     const patientsStore = computed(() => {
@@ -110,7 +112,12 @@ export default {
     const patient = computed(() => {
       if (!patientsStore.value.length) return null
 
-      return patientsStore.value.find((patient) => patient.id.value === route.params?.id)
+      return patientsStore.value.find((patient) => {
+        let newID = ''
+        if (patient?.id?.value) newID = patient.id.value.replace(/ /g, '')
+
+        return newID === route.params?.id
+      })
     })
 
     const fullName = computed(() => {
@@ -146,12 +153,16 @@ export default {
       }
     }
 
-    async function getPatient () {
+    async function getPatients () {
       try {
         isLoading.value = true
         if (patient.value) return
 
-        const { data } = await services.patient.getOne({ id: route.params.id })
+        const { data } = await services.patient.getAll({
+          page: route.params.page,
+          results: MAX_LIMIT,
+          seed: route.params.seed
+        })
 
         if (data?.results.length) store.dispatch('patient/addPatients', data?.results)
       } catch (error) {

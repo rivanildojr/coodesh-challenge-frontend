@@ -104,7 +104,8 @@ export default {
       pagination: {
         page: DEFAULT_PAGE,
         results: MAX_LIMIT
-      }
+      },
+      seed: null
     })
     const search = ref('')
     const showFilter = ref('')
@@ -123,9 +124,7 @@ export default {
     watch(() => route.params.id, () => {
       if (!route.params.id) return
 
-      modal.open({
-        component: 'ModalUser'
-      })
+      openModal()
     }, { immediate: true })
 
     const patientsStore = computed(() => {
@@ -152,9 +151,14 @@ export default {
           ...state.pagination
         })
 
-        if (data?.results.length) store.dispatch('patient/addPatients', data?.results)
+        if (data?.results.length) {
+          const newResults = data?.results.map((patient) => ({ ...patient, page: state.pagination.page, seed: data?.info?.seed }))
+            .filter((patient) => patient?.id?.value)
+          store.dispatch('patient/addPatients', newResults)
+        }
 
         state.pagination.page = ++state.pagination.page
+        state.seed = data?.info?.seed
       } catch (error) {
         handleError(error)
       } finally {
@@ -167,11 +171,20 @@ export default {
       toast.error('An error occurred while loading patients.')
     }
 
-    function handleShowDetailsPatients (id) {
+    function handleShowDetailsPatients (patient) {
+      const newID = patient.id.value.replace(/ /g, '')
+
+      if (route.params.id === newID) {
+        openModal()
+        return
+      }
+
       router.push({
         name: 'patients',
         params: {
-          id
+          page: patient.page,
+          seed: patient.seed,
+          id: newID
         }
       })
     }
@@ -197,6 +210,12 @@ export default {
     function filterNationality () {
       return patientsStore.value.filter((patient) => {
         return patient.nat.toLowerCase().includes(search.value.trim().toLowerCase())
+      })
+    }
+
+    function openModal () {
+      modal.open({
+        component: 'ModalUser'
       })
     }
 

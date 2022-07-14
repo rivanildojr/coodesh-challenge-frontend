@@ -52,7 +52,7 @@
           <td class="item-table" >{{ birthDate(patient.dob.date) }}</td>
           <td class="item-table">
             <button
-              @click="handleClickShowDetails(patient.id)"
+              @click="handleClickShowDetails(patient)"
               class="rounded-md bg-brand-main text-white font-regular py-1 px-2 focus:outline-none cursor-pointer hover:brightness-95"
             >
               View
@@ -111,8 +111,8 @@ export default {
       return `${birth.getMonth()}/${birth.getDay()}/${birth.getFullYear()}`
     }
 
-    function handleClickShowDetails ({ value }) {
-      emit('show-details', value)
+    function handleClickShowDetails (patient) {
+      emit('show-details', patient)
     }
 
     function handleSelectFilter (value, columnName) {
